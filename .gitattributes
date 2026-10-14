@@ -1,0 +1,24 @@
+# 统一换行：仓库里存 LF，检出时按平台
+* text=auto eol=lf
+
+# 图片 / 字体 / 音频：二进制，别做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.svg text
+*.ttf binary
+*.otf binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+
+# Godot 文本资源
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.godot text eol=lf
+*.import text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.mjs text eol=lf

@@ -1,0 +1,31 @@
+# ===== Godot 4 =====
+# 编辑器缓存 / 导入产物：不进仓库，克隆后 Godot 会自己重新导入（--import）
+.godot/
+*.translation
+export/
+build/
+*.pck
+*.zip
+
+# ===== 调试与临时产物 =====
+# 探针/预览脚本在项目根目录丢下的临时截图（_pv.png、_scarf.png、_tmp_*.png …）
+_*.png
+tools/_tmp_*
+*.log
+
+# ===== 编辑器 / 系统垃圾 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak
+*~
+*.orig
+*.rej
+.vscode/
+.idea/
+
+# ===== 不要提交的本地配置 =====
+# user:// 下的东西不在仓库里（存档/设置在 %APPDATA%\Godot\app_userdata\寻星\），
+# 这里只是防止有人把本机路径写进项目里
+*.local
