@@ -14,8 +14,9 @@ Godot 4 单机剧情解谜游戏。一周目（对话 + 六个解谜面板 + 三
 
 | 顺序 | 文件 | 里面有什么 |
 |---|---|---|
-| 1 | [`HANDOFF.md`](HANDOFF.md) | 交接主文档：怎么跑、目录结构、验证脚本、架构约定，**以及踩过的 65 个坑（改之前先扫一遍）** |
-| 2 | [`progress.md`](progress.md) | 做过什么、现在到哪一步、45 条改动记录（含"为什么这么做"） |
+| 0 | [`新程序员上手指南.md`](新程序员上手指南.md) | **第一次接手先看这个**：装引擎、跑起来、认代码、跑自测、提交，一步步来 |
+| 1 | [`HANDOFF.md`](HANDOFF.md) | 交接主文档：怎么跑、目录结构、验证脚本、架构约定，**以及踩过的 67 个坑（改之前先扫一遍）** |
+| 2 | [`progress.md`](progress.md) | 做过什么、现在到哪一步、46 条改动记录（含"为什么这么做"） |
 | 3 | [`测试清单-内部策划.md`](测试清单-内部策划.md) | 十个回归探针的基线项数 + 六个谜题逐条验收标准 + bug 上报模板 |
 | 4 | [`美术需求清单.md`](美术需求清单.md) | 还缺哪些美术资源（含 §8 待拍板的 7 条） |
 | 5 | [`_docs/`](_docs) | 设计稿原件：剧情流程、解谜、附录 1–9、原始大纲 |
@@ -52,8 +53,20 @@ Godot 4 单机剧情解谜游戏。一周目（对话 + 六个解谜面板 + 三
 
 ## 三、改完必跑（回归基线）
 
+**一条命令跑完全部**（十个探针 + 两个 Node 自检，最后打一张 PASS/FAIL 表）：
+
 ```powershell
-node tools/check_gdscript.mjs       # GDScript 静态结构自检
+pwsh -ExecutionPolicy Bypass -File tools/run_all_probes.ps1
+# 只有 Windows 自带的 PowerShell 5.1：
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\run_all_probes.ps1
+# 只跑几个（边改边验）：
+pwsh -ExecutionPolicy Bypass -File tools/run_all_probes.ps1 -Only probe_soup,probe_week1
+```
+
+单独跑也行：
+
+```powershell
+node tools/check_gdscript.mjs       # GDScript 静态结构自检（类表在 tools/godot_classes.json）
 node tools/validate_prelude.mjs     # 剧本 JSON 校验（序列 / 行数 / 出错项）
 ```
 

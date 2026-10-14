@@ -10,6 +10,9 @@ build/
 # ===== 调试与临时产物 =====
 # 探针/预览脚本在项目根目录丢下的临时截图（_pv.png、_scarf.png、_tmp_*.png …）
 _*.png
+# 跑工具时顺手重定向出来的日志（_chk.txt …）
+/_*.txt
+/_tmp_*
 tools/_tmp_*
 *.log
 

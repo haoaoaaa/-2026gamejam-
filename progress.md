@@ -507,4 +507,22 @@ node tools/validate_prelude.mjs
       这几条就是"旧版写死一件衣服"的回归钩子。
     实机看过四件各一张（深色卫衣 / 校服外套 / 红外套 / 围巾），形状与颜色都对得上被点的那一件。
 
-其他坑（共 65 条）见 `HANDOFF.md` 第五节。
+46. **把项目整理成可交接的仓库并推上 GitHub**（2026-01，Kerry：「帮我把这个游戏现有的所有内容传到 github 仓库上，
+    我不干了，让其他程序员继续修改，写游戏」＋「写一个交接说明教程，免得他们不会搞」）：
+    - 新增仓库门面：`README.md`（剧透警告必须私有、先读什么、怎么跑、回归基线表、目录结构、
+      改东西的 7 条规矩、现状与缺口）、`新程序员上手指南.md`（从装引擎到提交的一步步教程：拿到代码 /
+      装 Godot 4.7.2 / 五分钟认代码 / 一条命令跑自测 / git 协作 / 排错速查），以及 `.gitignore`、`.gitattributes`。
+    - 新增 `tools/run_all_probes.ps1`（一条命令跑完十个探针 + 两个 Node 静态自检，打印 PASS/WARN/FAIL 表，
+      内置基线项数，`-Only` 可只跑几项，退出码 0 全绿 / 1 有 FAIL / 2 参数错）与 `tools/dump_classdb.gd`
+      （把 `ClassDB.get_class_list()` 导出成 `tools/godot_classes.json`，**1054 个引擎类**）。
+    - `tools/check_gdscript.mjs` 从"报 118 个问题"修到**全绿**（其中约 115 个是假报）：跳过 `_archive/`
+      与 `_docs/`（Node 脚本不认 `.gdignore`）、`res://_*` 视为运行时产物、类表改成合并导出的 JSON。
+      详见 `HANDOFF.md` 坑 67。
+    - 仓库：`git init -b main` → 首次提交 401 个文件 / 29582 行（`876afb5`）→ 推到
+      `https://github.com/haoaoaaa/-2026gamejam-`；`.godot/`、临时截图与日志都不入库。
+    - 踩到三个坑：`fatal: detected dubious ownership in repository`（要 `git config --global --add safe.directory`）、
+      受限沙箱里 `git push` 报 `cannot create standard input pipe for remote-https: Permission denied`
+      （放宽权限重试一次才成）、**Kerry 建的仓库是 public**（`_docs/`、`大纲.txt`、`HANDOFF.md` 里写着凶手与答案），
+      已提醒他改成 Private。带中文的 `.ps1` 必须存成 UTF-8 with BOM（坑 66）。
+
+其他坑（共 67 条）见 `HANDOFF.md` 第五节。

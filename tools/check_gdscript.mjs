@@ -35,6 +35,8 @@ const note = (file, line, msg) => notes.push(`${file}:${line}  ${msg}`);
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
     if (name === ".godot" || name === ".git" || name === "node_modules") continue;
+    if (name === "_archive") continue; // 归档件（例如退休的 llm_client.gd）不算项目代码
+    if (name === "_docs") continue; // 设计稿原件（docx 解出来的文本），不是代码
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p, out);
     else out.push(p);
@@ -79,6 +81,18 @@ const GODOT_CLASSES = new Set([
   "RandomNumberGenerator", "Time", "Performance", "MainLoop", "ConfigFile",
   "DirAccess", "Thread", "WorkerThreadPool",
 ]);
+
+// 上面这份是手写的最小表（保证没有 godot_classes.json 时也能跑）。
+// 完整的类表由 tools/dump_classdb.gd 从引擎里导出来，存在 tools/godot_classes.json：
+//   godot --headless --path . --script tools/dump_classdb.gd
+// 换了 Godot 版本、或这里报「XXX.new()：既不是 Godot 内置类」但你确定那是引擎自带的类，
+// 就重跑一次那个脚本，把 godot_classes.json 一起提交。
+try {
+  const dumped = JSON.parse(readFileSync(join(root, "tools/godot_classes.json"), "utf8"));
+  for (const c of dumped) GODOT_CLASSES.add(c);
+} catch {
+  console.log("（没找到 tools/godot_classes.json，只用内置的最小类表）");
+}
 
 // ---------------------------------------------------------------- 字符扫描器
 // 逐字符遍历，正确跟踪字符串 / 注释 / 三引号多行串，再统计括号与引号。
@@ -371,8 +385,11 @@ const OPTIONAL_ASSET_PREFIX = "assets/";
 for (const [rel, info] of parsed) {
   info.lines.forEach((raw, i) => {
     for (const m of raw.matchAll(/"(res:\/\/[^"]+\.(?:gd|tscn|gdshader|json|png))"/g)) {
-      if (m[1].replace("res://", "").startsWith(OPTIONAL_ASSET_PREFIX)) continue;
-      if (!existsSync(join(root, m[1].replace("res://", "")))) {
+      const r = m[1].replace("res://", "");
+      if (r.startsWith(OPTIONAL_ASSET_PREFIX)) continue;
+      // 探针/预览脚本运行时自己写出来的临时图（项目约定：以下划线开头的临时文件，已 gitignore）
+      if (r.startsWith("_")) continue;
+      if (!existsSync(join(root, r))) {
         bad(rel, i + 1, `代码里引用了不存在的资源 ${m[1]}`);
       }
     }

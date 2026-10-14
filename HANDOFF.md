@@ -33,14 +33,29 @@
 所以直接 F5 是封面 → 点一下进第一天六关；整条链是
 **封面 → 第一天六关 → 前日谈（两幕）→ 第一天收尾 → 第二天 → 回标题页**（详见坑 58）。
 
+**文档地图**（第一次接手按这个顺序看）：
+`新程序员上手指南.md`（从装引擎到提交，一步步来）→ `README.md`（总览 + 回归基线）→
+本文 `HANDOFF.md`（架构、约定、踩过的 67 个坑）→ `progress.md`（改过什么、为什么）→
+`测试清单-内部策划.md`（十个探针基线 + 逐关验收标准）/ `测试清单-外部玩家.md`（无剧透，可转发）→
+`美术需求清单.md`（还缺哪些图）→ `_docs/`（设计稿原件，**含剧透**）。
+
 **操作**：鼠标左键 / 空格 = 推进对话；走过场时 **WASD 或方向键**走动，
 空格 / E / 点击 = 查看身边物件，弹窗里再按空格收起；**Tab** 打开笔记页，
 **Esc** 也可以（另外 `T` 也能开笔记）。
 
 ### 验证脚本（改完一定要跑）
 
+**一条命令跑完全部**（十个探针 + 两个 Node 静态自检，末尾打一张 PASS/WARN/FAIL 表；
+`-Godot` 不传会自己找 console 版 exe，`-Only probe_soup,probe_week1` 可以只跑几项）：
+
 ```powershell
-node tools/check_gdscript.mjs      # GDScript 静态结构自检
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\run_all_probes.ps1
+```
+
+单独跑：
+
+```powershell
+node tools/check_gdscript.mjs      # GDScript 静态结构自检（类表 tools/godot_classes.json）
 node tools/validate_prelude.mjs    # 剧本 JSON 校验（序列数 / 行数 / 出错项）
 
 # 一周目端到端自检：八个面板 + 三次走位 + 幕间 + 章节链（209 项，全绿才算过）
@@ -197,6 +212,8 @@ shaders/
   portrait_frame.gdshader         立绘白纸剔除 + 边缘溶解
 
 tools/
+  run_all_probes.ps1              一条命令跑完全部自检（十个探针 + 两个 Node 检查，PASS/WARN/FAIL 表；-Only 可只跑几项）
+  dump_classdb.gd                 导出引擎类表 → tools/godot_classes.json（check_gdscript.mjs 用它；换引擎版本要重跑）
   check_gdscript.mjs              GDScript 静态自检
   validate_prelude.mjs            剧本校验
   import_assets.gd                素材入库（拷图 + 抠底 + 裁边，幂等，改了抠底规则要重跑）
@@ -782,6 +799,25 @@ peek 的追加台词靠"名字相同"对接。
 	只要看到详情函数里出现**字面量颜色 / 字面量坐标**，就该警惕它是不是写死了某一件。
 	回归钩子：`probe_week1` 里新增的 7 条（颜色逐件对上 `CLOTHES`、围巾无口袋、点围巾标题不是外套、
 	点第三件标题是红色外套且右侧那块仍是「右上袋」）。
+66. **Windows 上带中文的 `.ps1` 必须存成 UTF-8 **with BOM****（2026-01，写 `tools/run_all_probes.ps1` 时踩的）：
+	没有 BOM 的 UTF-8，Windows PowerShell 5.1 会按 GBK 解析 → `Parser::ParseFile` 一次报 31 处语法错误，
+	报错信息里的中文全是乱码（`note = "璧颁綅…"`），看上去像脚本写坏了、其实是编码。
+	本文用的 `write` / `edit` 工具写出来都不带 BOM，所以**每次改完这个脚本都要补**：
+	`[System.IO.File]::WriteAllText($p, $t, (New-Object System.Text.UTF8Encoding($true)))`，
+	然后用 `[System.IO.File]::ReadAllBytes($p)[0..2]` 确认是 `239,187,191`。
+	另外：Windows 默认执行策略不允许跑 `.ps1`，命令行要加 `-ExecutionPolicy Bypass`，
+	否则报 `AuthorizationManager check failed`（`pwsh` 未安装时用 `powershell -NoProfile -ExecutionPolicy Bypass -File …`）。
+67. **静态检查器的"已知集合"会过期，而且它不认 `.gdignore`**（2026-01，交接时发现的）：
+	`tools/check_gdscript.mjs` 一度报 118 个问题，其中 115 个是假的——
+	① 它扫全项目，把归档件 `_archive/llm/llm_client.gd`（已退休的 LLM 客户端）当成项目代码；
+	② 探针/预览脚本运行时写出来的 `res://_pv.png`、`res://_cut_*.png` 被当成"引用了不存在的资源"；
+	③ `GODOT_CLASSES` 是手写的最小表，1054 个引擎类里少了一大半，于是 `HSlider.new()`、
+	   `TCPServer.new()` 这类全被报成"不是内置类"。
+	现在：`walk()` 显式跳过 `_archive/` 与 `_docs/`（Godot 只认 `.gdignore`，Node 脚本不认，得自己排除）；
+	`res://_` 开头的路径视为运行时产物；类表从 `tools/godot_classes.json` 合并进来，
+	那份表由 `tools/dump_classdb.gd` 用 `ClassDB.get_class_list()` 导出（**换引擎版本后要重跑一次**）。
+	教训：假报会让后来人不再相信检查器——报错成堆时先怀疑检查器自己的名单过期了，
+	但**别为了变绿去删检查项**，要让它真的能分辨。
 
 ---
 
